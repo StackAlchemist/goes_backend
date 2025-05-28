@@ -4,8 +4,9 @@ import cloudinary from "../config/cloudinary";
 import { Readable } from "stream";
 
 export const createProject = async (req: Request, res: Response) => {
+  console.log('project creation request was sent')
   try {
-    const { title, description } = req.body;
+    const { title, description, status, location } = req.body;
     const files = req.files as Express.Multer.File[];
 
     if (!files || files.length === 0) {
@@ -34,7 +35,7 @@ export const createProject = async (req: Request, res: Response) => {
 
     const imageUrls = await Promise.all(uploadPromises);
 
-    await Project.create({ title, description, images: imageUrls });
+    await Project.create({ title, description, images: imageUrls, status, location });
 
     res.status(201).json({
       message: "Project created successfully",
@@ -42,12 +43,39 @@ export const createProject = async (req: Request, res: Response) => {
         title,
         description,
         images: imageUrls,
+        status,
+        location
       },
     });
   } catch (error) {
-    console.error("Error creating project:", error);
+    console.error("Error creating project:", error.message, error.stack);
     res.status(500).json({ message: "Failed to create project" });
   }
 };
+
+export const getProjects = async (req: Request, res: Response)=>{
+  try {
+    const projects = await Project.find({})
+    res.status(200).json(projects)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({message: 'internal server error'})
+  }
+}
+
+export const getProjectById = async (req: Request, res: Response) => {
+  try {
+    const projectId = req.params.id;
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+    res.status(200).json(project);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 
 

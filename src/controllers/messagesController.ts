@@ -12,3 +12,13 @@ export const sendMessage = async (req: Request, res: Response) => {
     }
 }
 
+export const getMessage = async (req: Request, res: Response) =>{
+    try {
+        const messages = await Messages.find({})
+        res.status(200).json(messages)
+    } catch (error) {
+        console.log(error)
+        res.status(400).json({message: 'internal server'})
+    }
+}
+
