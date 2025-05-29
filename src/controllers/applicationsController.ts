@@ -3,13 +3,12 @@ import cloudinary from "../config/cloudinary";
 import { Request, Response } from "express";
 import { Readable } from "stream";
 
-export const createApplication = async (req: Request, res: Response) => {
+export const createApplication = async (req: Request, res: Response): Promise<void> => {
   try {
     const { firstName, lastName, institution, email, type } = req.body;
     const document = req.file;
-
     if (!document) {
-      return res.status(400).json({ message: "Document is required" });
+      throw new Error("Document is required");
     }
 
     const bufferStream = Readable.from(document.buffer);
@@ -17,7 +16,7 @@ export const createApplication = async (req: Request, res: Response) => {
     const result = await new Promise<any>((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         {
-          resource_type: 'raw', // For DOCX/PDF uploads
+          resource_type: 'raw', // for DOCX/PDF uploads
           folder: 'applications',
           use_filename: true,
           unique_filename: false,
@@ -27,9 +26,13 @@ export const createApplication = async (req: Request, res: Response) => {
           resolve(result);
         }
       );
-
       bufferStream.pipe(stream);
     });
+
+    // Ensure result has secure_url before using it
+    if (!result || !result.secure_url) {
+      throw new Error("Failed to upload document to Cloudinary");
+    }
 
     const application = await Applications.create({
       firstName,
@@ -40,36 +43,37 @@ export const createApplication = async (req: Request, res: Response) => {
       document: result.secure_url,
     });
 
-    res.status(201).json({ message: "Application created successfully" });
-  } catch (error) {
-    console.error(error);
+    res.status(201).json({ 
+      message: "Application created successfully",
+      application,
+    });
+  } catch (error: unknown) {
+    console.error("Error creating application:", error instanceof Error ? error.message : error);
     res.status(500).json({ message: "Error creating application" });
   }
-};  
+};
 
-
-export const getApplications = async (req: Request, res: Response) => {
+export const getApplications = async (req: Request, res: Response): Promise<void> => {
   try {
-    const applications = await Applications.find({})
-    res.status(200).json(applications)
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({message: 'internal server error'})
-  }
-}
-
-export const getApplicationById = async (req: Request, res: Response) => {
-  try {
-    const id = req.params.id;
-    const application = await Applications.findById(id);
-    if (!application) {
-      return res.status(404).json({ message: "Application not found" });
-    }
-    res.status(200).json(application);
-  } catch (error) {
-    console.error(error);
+    const applications = await Applications.find({});
+    res.status(200).json(applications);
+  } catch (error: unknown) {
+    console.error("Error fetching applications:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
-
+export const getApplicationById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = req.params.id;
+    const application = await Applications.findById(id);
+    if (!application) {
+      res.status(404).json({ message: "Application not found" });
+      return;
+    }
+    res.status(200).json(application);
+  } catch (error: unknown) {
+    console.error("Error fetching application by id:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

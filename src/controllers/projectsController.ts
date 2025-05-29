@@ -16,7 +16,7 @@ export const createProject = async (req: Request, res: Response) => {
     // Upload each image to Cloudinary
     const uploadPromises = files.map((file) => {
       const stream = Readable.from(file.buffer);
-      return new Promise<any>((resolve, reject) => {
+      return new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
           {
             folder: "projects",
@@ -48,7 +48,7 @@ export const createProject = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    console.error("Error creating project:", error.message, error.stack);
+    console.error("Error creating project:");
     res.status(500).json({ message: "Failed to create project" });
   }
 };
