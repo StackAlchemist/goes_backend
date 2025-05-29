@@ -78,4 +78,43 @@ export const getProjectById = async (req: Request, res: Response) => {
 };
 
 
+// src/controllers/projectsController.ts/ adjust path as needed
+
+export const editProject = async (req: Request, res: Response) => {
+  try {
+    const projectId = req.params.id;
+    const { title, description, status, location } = req.body;
+
+    const updatedProject = await Project.findByIdAndUpdate(
+      projectId,
+      { title, description, status, location },
+      { new: true }
+    );
+
+    if (!updatedProject) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    res.status(200).json(updatedProject);
+  } catch (error) {
+    console.error("Error editing project:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const deleteProject = async (req: Request, res: Response) => {
+  try {
+    const projectId = req.params.id;
+    await Project.findByIdAndDelete(projectId);
+    res.status(200).json({ message: "Project deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+
+
+
 

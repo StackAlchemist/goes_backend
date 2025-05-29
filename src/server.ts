@@ -4,14 +4,19 @@ import cors from 'cors'
 import messagesRoutes from "./routes/messagesRoutes";
 import applicationsRoutes from "./routes/applicationsRoutes";
 import projectsRoutes from "./routes/projectRoutes";
+import adminRoutes from "./routes/adminRoutes"
 const app = express();
 
 connectDB();
-app.use(cors())
+app.use(cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true // boolean, not string
+  }));
 app.use(express.json());
 app.use("/api/messages", messagesRoutes);
 app.use("/api/applications", applicationsRoutes);
 app.use("/api/projects", projectsRoutes);   
+app.use("/api/admin", adminRoutes)
 
 
 app.listen(2000, () => {

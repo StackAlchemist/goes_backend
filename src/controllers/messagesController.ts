@@ -22,3 +22,15 @@ export const getMessage = async (req: Request, res: Response) =>{
     }
 }
 
+export const deleteMessage = async (req: Request, res: Response) => {
+    const id = req.params.id;
+    try {
+        await Messages.findByIdAndDelete(id);
+        res.status(200).json({ message: "Message deleted successfully" });
+    } catch (error) {
+        res.status(400).json({ message: "Error deleting message" });
+    }
+}
+
+
+
