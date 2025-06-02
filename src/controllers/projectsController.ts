@@ -113,8 +113,3 @@ export const deleteProject = async (req: Request, res: Response) => {
   }
 };
 
-
-
-
-
-

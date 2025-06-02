@@ -13,8 +13,8 @@ const adminRoutes_1 = __importDefault(require("./routes/adminRoutes"));
 const app = (0, express_1.default)();
 (0, mongodb_1.default)();
 app.use((0, cors_1.default)({
-    origin: process.env.CLIENT_URL,
-    credentials: true // boolean, not string
+    origin: [process.env.CLIENT_URL || "", "https://gani-ola.vercel.app"],
+    credentials: true
 }));
 app.use(express_1.default.json());
 app.use("/api/messages", messagesRoutes_1.default);

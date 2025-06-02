@@ -9,8 +9,8 @@ const app = express();
 
 connectDB();
 app.use(cors({
-    origin: process.env.CLIENT_URL,
-    credentials: true // boolean, not string
+    origin: [process.env.CLIENT_URL || "", "https://gani-ola.vercel.app"],
+    credentials: true
   }));
 app.use(express.json());
 app.use("/api/messages", messagesRoutes);

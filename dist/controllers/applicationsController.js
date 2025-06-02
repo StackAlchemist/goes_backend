@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -16,7 +7,7 @@ exports.getApplicationById = exports.getApplications = exports.createApplication
 const applicationsModel_1 = __importDefault(require("../models/applicationsModel"));
 const cloudinary_1 = __importDefault(require("../config/cloudinary"));
 const stream_1 = require("stream");
-const createApplication = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const createApplication = async (req, res) => {
     try {
         const { firstName, lastName, institution, email, type } = req.body;
         const document = req.file;
@@ -24,7 +15,7 @@ const createApplication = (req, res) => __awaiter(void 0, void 0, void 0, functi
             throw new Error("Document is required");
         }
         const bufferStream = stream_1.Readable.from(document.buffer);
-        const result = yield new Promise((resolve, reject) => {
+        const result = await new Promise((resolve, reject) => {
             const stream = cloudinary_1.default.uploader.upload_stream({
                 resource_type: 'raw', // for DOCX/PDF uploads
                 folder: 'applications',
@@ -41,7 +32,7 @@ const createApplication = (req, res) => __awaiter(void 0, void 0, void 0, functi
         if (!result || !result.secure_url) {
             throw new Error("Failed to upload document to Cloudinary");
         }
-        const application = yield applicationsModel_1.default.create({
+        const application = await applicationsModel_1.default.create({
             firstName,
             lastName,
             institution,
@@ -58,23 +49,23 @@ const createApplication = (req, res) => __awaiter(void 0, void 0, void 0, functi
         console.error("Error creating application:", error instanceof Error ? error.message : error);
         res.status(500).json({ message: "Error creating application" });
     }
-});
+};
 exports.createApplication = createApplication;
-const getApplications = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getApplications = async (req, res) => {
     try {
-        const applications = yield applicationsModel_1.default.find({});
+        const applications = await applicationsModel_1.default.find({});
         res.status(200).json(applications);
     }
     catch (error) {
         console.error("Error fetching applications:", error);
         res.status(500).json({ message: "Internal server error" });
     }
-});
+};
 exports.getApplications = getApplications;
-const getApplicationById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getApplicationById = async (req, res) => {
     try {
         const id = req.params.id;
-        const application = yield applicationsModel_1.default.findById(id);
+        const application = await applicationsModel_1.default.findById(id);
         if (!application) {
             res.status(404).json({ message: "Application not found" });
             return;
@@ -85,5 +76,5 @@ const getApplicationById = (req, res) => __awaiter(void 0, void 0, void 0, funct
         console.error("Error fetching application by id:", error);
         res.status(500).json({ message: "Internal server error" });
     }
-});
+};
 exports.getApplicationById = getApplicationById;
