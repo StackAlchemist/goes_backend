@@ -4,7 +4,8 @@ import cloudinary from "../config/cloudinary";
 import { Readable } from "stream";
 
 export const createProject = async (req: Request, res: Response) => {
-  console.log('project creation request was sent')
+  console.log("Project creation request was sent");
+
   try {
     const { title, description, status, location } = req.body;
     const files = req.files as Express.Multer.File[];
@@ -13,29 +14,48 @@ export const createProject = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "At least one image is required" });
     }
 
-    // Upload each image to Cloudinary
-    const uploadPromises = files.map((file) => {
+    // Optional: Prevent duplicate files based on name + size
+    const uniqueFiles = Array.from(
+      new Map(files.map(file => [`${file.originalname}-${file.size}`, file])).values()
+    );
+
+    // Upload each image to Cloudinary with unique name
+    const uploadPromises = uniqueFiles.map((file) => {
       const stream = Readable.from(file.buffer);
-      return new Promise((resolve, reject) => {
+
+      return new Promise<string>((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
           {
             folder: "projects",
             resource_type: "image",
-            use_filename: true,
-            unique_filename: false,
+            use_filename: false,         // Let Cloudinary generate unique names
+            unique_filename: true        // Ensures each uploaded file is unique
           },
           (err, result) => {
-            if (err) return reject(err);
-            resolve(result?.secure_url);
+            if (err || !result?.secure_url) {
+              return reject(err || new Error("Upload failed"));
+            }
+            resolve(result.secure_url);
           }
         );
+
         stream.pipe(uploadStream);
       });
     });
 
     const imageUrls = await Promise.all(uploadPromises);
 
-    await Project.create({ title, description, images: imageUrls, status, location });
+    // Log uploaded image URLs
+    console.log("Uploaded image URLs:", imageUrls);
+
+    // Save to database
+    await Project.create({
+      title,
+      description,
+      images: imageUrls,
+      status,
+      location,
+    });
 
     res.status(201).json({
       message: "Project created successfully",
@@ -48,7 +68,7 @@ export const createProject = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    console.error("Error creating project:");
+    console.error("Error creating project:", error);
     res.status(500).json({ message: "Failed to create project" });
   }
 };
