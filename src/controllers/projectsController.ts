@@ -5,10 +5,15 @@ import { Readable } from "stream";
 
 export const createProject = async (req: Request, res: Response) => {
   console.log("Project creation request was sent");
+  
 
   try {
     const { title, description, status, location } = req.body;
     const files = req.files as Express.Multer.File[];
+    files.forEach((file, i) => {
+      console.log(`Received ${file.originalname} (${file.size})`);
+    });
+    
 
     if (!files || files.length === 0) {
       return res.status(400).json({ message: "At least one image is required" });
